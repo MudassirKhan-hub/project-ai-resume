@@ -1,0 +1,34 @@
+{
+  "kind": "collectionType",
+  "collectionName": "resumes",
+  "info": {
+    "singularName": "resume",
+    "pluralName": "resumes",
+    "displayName": "Resume",
+    "description": "Store user resumes"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "resumeId": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "userEmail": {
+      "type": "email",
+      "required": true
+    },
+    "userName": {
+      "type": "string"
+    },
+    "resumeData": {
+      "type": "json"
+    }
+  }
+}

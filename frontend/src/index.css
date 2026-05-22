@@ -1,0 +1,174 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&family=Roboto+Mono:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 47.4% 11.2%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47.4% 11.2%;
+
+    /* Premium Indigo / Violet palette */
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --accent: 262.1 83.3% 95%;
+    --accent-foreground: 262.1 83.3% 57.8%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 262.1 83.3% 57.8%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+
+    --muted: 223 47% 11%;
+    --muted-foreground: 215.4 16.3% 56.9%;
+
+    --popover: 224 71% 4%;
+    --popover-foreground: 215 20.2% 65.1%;
+
+    --border: 216 34% 17%;
+    --input: 216 34% 17%;
+
+    --card: 224 71% 4%;
+    --card-foreground: 213 31% 91%;
+
+    --primary: 263.4 70% 50.4%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 222.2 47.4% 11.2%;
+    --secondary-foreground: 210 40% 98%;
+
+    --accent: 216 34% 17%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 263.4 70% 50.4%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Outfit', sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  /* Fix vertical alignment for icons and decorative dots across DOM and html2canvas */
+  svg.lucide {
+    display: inline-flex;
+    align-self: center;
+    vertical-align: middle;
+  }
+  
+  .pdf-export-mode svg.lucide {
+    position: relative !important;
+    top: 4px !important; /* Refined icon offset */
+  }
+  
+  .pdf-export-mode .rounded-full {
+    position: relative !important;
+    top: 1px !important; /* Minimal offset for remaining small dots */
+  }
+
+  /* Fix list bullets shifting up in html2canvas */
+  .pdf-export-mode ul.list-disc {
+    list-style-type: none;
+  }
+  .pdf-export-mode ul.list-disc > li {
+    position: relative;
+    padding-left: 0.5rem;
+  }
+  .pdf-export-mode ul.list-disc > li::before {
+    content: "•";
+    position: absolute;
+    left: -0.8em;
+    top: 1px;
+    font-size: 1.2em;
+    line-height: 1.4;
+  }
+
+  .pdf-export-mode {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    width: 794px !important;
+    margin: 0 !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+
+  /* Keep headers with their following content */
+  .pdf-export-mode h2,
+  .pdf-export-mode h3 {
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  /* Multi-page break handling */
+  .pdf-export-mode .experience-item,
+  .pdf-export-mode .education-item,
+  .pdf-export-mode .project-item,
+  .pdf-export-mode .skill-item,
+  .pdf-export-mode .certification-item,
+  .pdf-export-mode .language-item,
+  .pdf-export-mode .reference-item {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    display: block; 
+    margin-bottom: 1rem;
+  }
+}
+
+/* Template spacing control */
+.template-container section, 
+.template-container .mb-8, 
+.template-container .mb-10,
+.template-container .mb-6,
+.template-container .space-y-8 > div,
+.template-container .space-y-10 > div,
+.template-container .space-y-6 > div {
+  margin-bottom: var(--section-spacing, 24px) !important;
+}
+
+/* Ensure font previews look good in dropdowns */
+select optgroup {
+  font-weight: 700;
+  color: #94a3b8;
+  background: #1f2937;
+}
+
+select option {
+  padding: 8px;
+  background: #111827;
+  color: white;
+}
