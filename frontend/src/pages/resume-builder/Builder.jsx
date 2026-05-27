@@ -70,16 +70,17 @@ const Builder = () => {
     const opt = {
       margin:       0, // Use element's internal padding instead
       filename:     fileName,
-      image:        { type: 'jpeg', quality: 0.98 },
+      image:        { type: 'jpeg', quality: 1.0 }, // Maximum quality
       html2canvas:  { 
-        scale: 2.5, // High resolution
+        scale: 4, // Ultra-high resolution to prevent blurriness
         useCORS: true, 
         letterRendering: true,
         logging: false,
-        windowWidth: 794 // Force A4 width at 96 DPI for consistent layout
+        windowWidth: 794, // Force A4 width at 96 DPI for consistent layout
+        scrollY: 0 // Prevent scrolling misalignment
       },
       jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak:    { mode: 'css' } // Rely on CSS for breaks
+      pagebreak:    { mode: ['css', 'legacy'] } // Dual-mode for better section breaks
     };
 
     setIsExportMode(true);
@@ -346,13 +347,13 @@ const Builder = () => {
           </div>
         </div>
         
-        <div className="flex items-center gap-2 lg:gap-3">
-          <div className="relative hidden sm:block">
+        <div className="flex items-center gap-1 sm:gap-2 lg:gap-3">
+          <div className="relative">
             <button 
               onClick={() => setIsTemplateDropdownOpen(!isTemplateDropdownOpen)}
-              className="flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-primary transition-colors px-3 py-2 rounded-lg hover:bg-gray-50"
+              className="flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-primary transition-colors px-2 sm:px-3 py-2 rounded-lg hover:bg-gray-50"
             >
-              <LayoutTemplate className="w-4 h-4" /> Templates
+              <LayoutTemplate className="w-4 h-4" /> <span className="hidden sm:inline">Templates</span>
             </button>
             
             <AnimatePresence>

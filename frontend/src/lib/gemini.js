@@ -1,37 +1,96 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+const groqApiKey = import.meta.env.VITE_GROQ_API_KEY;
+const openaiApiKey = import.meta.env.VITE_OPENAI_API_KEY;
+
 const genAI = new GoogleGenerativeAI(apiKey || 'dummy');
 
+const callGroqAPI = async (prompt) => {
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${groqApiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'llama3-8b-8192',
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  
+  if (!response.ok) throw new Error(`Groq API failed with status ${response.status}`);
+  const data = await response.json();
+  return data.choices[0].message.content.trim();
+};
+
+const callOpenAIAPI = async (prompt) => {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${openaiApiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  
+  if (!response.ok) throw new Error(`OpenAI API failed with status ${response.status}`);
+  const data = await response.json();
+  return data.choices[0].message.content.trim();
+};
+
 const generateWithFallback = async (prompt) => {
-  if (!apiKey) {
-    throw new Error("Gemini API key is not configured. Please add VITE_GEMINI_API_KEY to your .env.local file.");
+  let lastError = null;
+
+  // 1. Try Gemini
+  if (apiKey) {
+    const modelsToTry = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+    for (const modelName of modelsToTry) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent(prompt);
+        return result.response.text().trim();
+      } catch (error) {
+        console.warn(`Gemini Model ${modelName} failed:`, error.message);
+        lastError = error;
+      }
+    }
+  } else {
+    console.warn("Gemini API key is not configured.");
   }
 
-  // We are using gemini-2.5-flash as it is the only one working in this environment
-  const modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-pro"];
-  
-  let lastError = null;
-  for (const modelName of modelsToTry) {
+  // 2. Try Groq (First Fallback)
+  if (groqApiKey) {
     try {
-      const model = genAI.getGenerativeModel({ model: modelName });
-      const result = await model.generateContent(prompt);
-      return result.response.text().trim();
+      console.log("Trying Groq API as fallback...");
+      return await callGroqAPI(prompt);
     } catch (error) {
-      console.warn(`Model ${modelName} failed:`, error.message);
+      console.warn("Groq API failed:", error.message);
       lastError = error;
-      // If it's a 429 (quota), we might want to stop or continue to next model
-      // But 404 means the model is definitely not available
     }
   }
 
-  console.error("All Gemini models failed. Last error:", lastError);
-  throw new Error("AI Service is temporarily unavailable. Please check your API key or try again later.");
+  // 3. Try OpenAI (Second Fallback)
+  if (openaiApiKey) {
+    try {
+      console.log("Trying OpenAI API as fallback...");
+      return await callOpenAIAPI(prompt);
+    } catch (error) {
+      console.warn("OpenAI API failed:", error.message);
+      lastError = error;
+    }
+  }
+
+  console.error("All AI services failed. Last error:", lastError);
+  throw new Error("AI Service is temporarily unavailable. Please check your API keys or try again later.");
 };
 
 export const generateSummary = async (personalInfo, experience, skills, customPrompt = '') => {
   const prompt = customPrompt 
-    ? `You are a friendly and helpful resume assistant. Your goal is to write a simple, clear, and professional resume summary (3-4 sentences).
+    ? `You are a friendly, warm, and helpful resume assistant. Your goal is to write an engaging, conversational, and friendly resume summary (3-4 sentences).
 
     USER'S REQUEST:
     "${customPrompt}"
@@ -42,23 +101,23 @@ export const generateSummary = async (personalInfo, experience, skills, customPr
     - Skills: ${skills}
 
     RULES:
-    1. Be friendly and professional. Use simple, easy-to-understand words.
+    1. Write in a very friendly, natural, and human-like tone. Use conversational but professional language.
     2. Follow the USER'S REQUEST exactly. 
     3. Use my details to make it real, but if the request asks for a different role, focus on that.
-    4. Do NOT use "I", "me", or "my".
-    5. Give me ONLY the summary text. No quotes or extra talking.`
-    : `You are a friendly and helpful resume assistant. Write a simple, professional, and easy-to-read summary (3-4 sentences) for my resume using these details:
+    4. Do NOT use "I", "me", or "my". Focus on the person in third-person implicitly (e.g., "Passionate developer with...").
+    5. Give me ONLY the summary text in paragraph form. No quotes or extra talking.`
+    : `You are a friendly, warm, and helpful resume assistant. Write an engaging, conversational, and friendly summary (3-4 sentences) for my resume using these details:
 
     Job Title: ${personalInfo.title || 'Professional'}
     Experience: ${JSON.stringify(experience)}
     Skills: ${skills}
     
     RULES:
-    - Use simple and clear language.
-    - Highlight my best skills and achievements.
-    - Be confident but approachable.
-    - Do NOT use "I", "me", or "my".
-    - Return ONLY the summary text.`;
+    - Write in a very friendly, natural, and human-like tone. Use conversational but professional language.
+    - Highlight my best skills and achievements warmly.
+    - Be confident, approachable, and enthusiastic.
+    - Do NOT use "I", "me", or "my". Focus on the person implicitly.
+    - Return ONLY the summary text in paragraph form. No extra text.`;
 
   return await generateWithFallback(prompt);
 };
