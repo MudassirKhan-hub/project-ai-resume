@@ -211,7 +211,7 @@ const Builder = () => {
   const handleGenerateSummary = async () => {
     setIsGeneratingSummary(true);
     try {
-      const summary = await generateSummary(resumeData.personalInfo, resumeData.experience, resumeData.skills, '');
+      const summary = await generateSummary(resumeData.personalInfo, resumeData.experience, resumeData.skills, resumeData.summary);
       setResumeData({ ...resumeData, summary });
     } catch (error) {
       alert(error.message || "Failed to generate summary. Please check your API key.");
@@ -225,7 +225,7 @@ const Builder = () => {
     setGeneratingExperienceIdx(index);
     try {
       const exp = resumeData.experience[index];
-      const newDesc = await generateExperience(exp.title, exp.company, resumeData.skills);
+      const newDesc = await generateExperience(exp.title, exp.company, resumeData.skills, exp.description);
       handleUpdateItem('experience', index, 'description', newDesc);
     } catch (error) {
       alert(error.message || "Failed to generate experience. Please check your API key.");

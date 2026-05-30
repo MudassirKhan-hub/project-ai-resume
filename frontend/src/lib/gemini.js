@@ -14,7 +14,7 @@ const callGroqAPI = async (prompt) => {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: 'llama3-8b-8192',
+      model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: prompt }]
     })
   });
@@ -88,24 +88,23 @@ const generateWithFallback = async (prompt) => {
   throw new Error("AI Service is temporarily unavailable. Please check your API keys or try again later.");
 };
 
-export const generateSummary = async (personalInfo, experience, skills, customPrompt = '') => {
-  const prompt = customPrompt 
-    ? `You are a friendly, warm, and helpful resume assistant. Your goal is to write an engaging, conversational, and friendly resume summary (3-4 sentences).
+export const generateSummary = async (personalInfo, experience, skills, currentSummary = '') => {
+  const prompt = currentSummary && currentSummary.trim().length > 0 && currentSummary !== 'A passionate Software Engineer with expertise in modern web technologies. Dedicated to building scalable and user-friendly applications while maintaining clean code practices.'
+    ? `You are an expert AI resume writer. The user has provided some rough notes, a current draft, or specific instructions for their resume summary.
 
-    USER'S REQUEST:
-    "${customPrompt}"
+    USER'S INPUT (Instructions or Rough Draft):
+    "${currentSummary}"
 
-    MY DETAILS:
+    MY CURRENT FORM DETAILS:
     - Current Title: ${personalInfo.title || 'Professional'}
     - Experience: ${JSON.stringify(experience)}
     - Skills: ${skills}
 
     RULES:
-    1. Write in a very friendly, natural, and human-like tone. Use conversational but professional language.
-    2. Follow the USER'S REQUEST exactly. 
-    3. Use my details to make it real, but if the request asks for a different role, focus on that.
-    4. Do NOT use "I", "me", or "my". Focus on the person in third-person implicitly (e.g., "Passionate developer with...").
-    5. Give me ONLY the summary text in paragraph form. No quotes or extra talking.`
+    1. WRITE A HIGHLY PROFESSIONAL RESUME SUMMARY based strictly on the USER'S INPUT.
+    2. CRITICAL: The "CURRENT FORM DETAILS" might contain default placeholder data for a "Software Engineer" (e.g. JavaScript, React, Node). IF the USER'S INPUT is about a DIFFERENT field (like Marketing, Teacher, HR, Doctor, etc.), YOU MUST COMPLETELY IGNORE the "CURRENT FORM DETAILS". Do NOT mention Software Engineering, coding, or any tech skills.
+    3. If the USER'S INPUT is just a rough draft, polish it into an engaging resume summary.
+    4. Return ONLY the final summary text in paragraph form. Do NOT include quotes, intros, or conversational filler.`
     : `You are a friendly, warm, and helpful resume assistant. Write an engaging, conversational, and friendly summary (3-4 sentences) for my resume using these details:
 
     Job Title: ${personalInfo.title || 'Professional'}
@@ -113,17 +112,33 @@ export const generateSummary = async (personalInfo, experience, skills, customPr
     Skills: ${skills}
     
     RULES:
-    - Write in a very friendly, natural, and human-like tone. Use conversational but professional language.
-    - Highlight my best skills and achievements warmly.
-    - Be confident, approachable, and enthusiastic.
+    - Write in a very friendly, natural, and human-like tone.
+    - CRITICAL: If the Job Title is NOT related to Software Engineering/IT, but the Skills say "JavaScript, React.js", IGNORE those tech skills and experience. They are placeholder data. Only write about the actual Job Title provided.
     - Do NOT use "I", "me", or "my". Focus on the person implicitly.
     - Return ONLY the summary text in paragraph form. No extra text.`;
 
   return await generateWithFallback(prompt);
 };
 
-export const generateExperience = async (jobTitle, company, skills) => {
-  const prompt = `You are a friendly and helpful resume assistant. Write 3-4 simple, professional, and easy-to-read bullet points for my work experience.
+export const generateExperience = async (jobTitle, company, skills, currentDescription = '') => {
+  const prompt = currentDescription && currentDescription.trim().length > 0
+    ? `You are an expert resume writer. The user wants to write or improve their job experience bullet points based on these notes/instructions:
+
+  USER'S NOTES / INSTRUCTIONS:
+  "${currentDescription}"
+  
+  JOB CONTEXT:
+  - Title: ${jobTitle || 'Professional'}
+  - Company: ${company || 'Unknown Company'}
+  - Skills: ${skills}
+  
+  RULES:
+  1. Transform the user's notes into professional, impactful resume bullet points.
+  2. CRITICAL: If the user's notes or Job Title are for a NON-TECH field, COMPLETELY IGNORE the 'Skills' if they contain Software Engineering terms like JavaScript or React. Those are placeholders. Focus ONLY on the user's notes.
+  3. STRICTLY follow the user's instructions if they asked for a specific language, tone, or format.
+  4. Do NOT use bullet points or stars (* or -) at the start of lines. Just plain text separated by newlines.
+  5. Return ONLY the final text. No extra talking.`
+    : `You are a friendly and helpful resume assistant. Write 3-4 simple, professional, and easy-to-read bullet points for my work experience.
 
   MY JOB:
   - Title: ${jobTitle || 'Professional'}
@@ -131,6 +146,7 @@ export const generateExperience = async (jobTitle, company, skills) => {
   - Skills: ${skills}
   
   RULES:
+  - CRITICAL: If the Job Title is NOT related to Software Engineering/IT, IGNORE 'Skills' like JavaScript or React as they are placeholder data.
   - Use simple action words (like Led, Created, Improved).
   - Use clear and easy language that anyone can understand.
   - Do NOT use bullet points or stars at the start. Just plain text.
@@ -138,5 +154,5 @@ export const generateExperience = async (jobTitle, company, skills) => {
   - Return ONLY the points separated by newlines.`;
 
   const text = await generateWithFallback(prompt);
-  return text.split('\n').map(line => line.replace(/^[\s•\-\*]+/, '').trim()).filter(line => line.length > 0).join('\n');
+  return text.split('\n').map(line => line.replace(/^[\s•\-*]+/, '').trim()).filter(line => line.length > 0).join('\n');
 };
